@@ -1,0 +1,165 @@
+﻿function getProcID(sourcetype,skip) {
+	rpid=0;
+	skip?true:false;
+	switch (sourcetype) {
+	case 1: // RGui
+		rguipid = shell.FindWindow("Rgui Workspace", "");
+		if (rguipid) {
+			!skip?sleep(100):false
+			rpid = getChildProcID(rguipid)
+		} else {
+			rpid=0;
+		}
+		break;
+	case 2: // rterm
+		rtm = shell.FindWindow("ConsoleWindowClass","Rterm")
+		rpid = (rtm)?rtm.ProcessID:0
+		break;
+	default: 
+		rpid=0; 
+	}
+//	!skip?sleep(300):false;
+	return rpid;	
+}
+
+function getAnyPid(skip) {
+	guipid = getProcID(1,skip);
+	return guipid!=0?guipid:getProcID(2,skip);
+}
+
+function getChildProcID(parentWnd) {
+	// Required to find console running in RGui
+	var childWnd=0;
+	if(parentWnd) {
+		Cwnds = parentWnd.Children
+		for ( i=1;i<=Cwnds.Count;i++) {
+			if (Cwnds.item(i).Caption == "R Console") { 
+				childWnd = Cwnds.item(i).ProcessID
+				break;
+			} 
+		}	
+	}
+	return childWnd;
+}
+
+function createTempFile(rcode) {
+	tmpPath='';
+	try {
+	  fso = new ActiveXObject("Scripting.FileSystemObject");	
+	  tmpPath = fso.BuildPath(fso.GetSpecialFolder(2),fso.GetTempName());
+	  tf = fso.CreateTextFile(tmpPath, true);
+	  tf.WriteLine(rcode) ;
+	  tf.Close();
+	  
+	}
+	catch (e) {
+		OutputBar.Visible = true;
+		OutputBar.Writeln(e.message)
+	}
+	finally {
+	       tf=null;
+	       fso=null;
+	}	
+	return tmpPath;
+}
+
+function getRCode(skipSelectAll){
+	skip = skipSelectAll?true:false;
+	rcode = editor.ActiveDocument.selection.Text;
+	Col=1;Row=1;
+	if (rcode == ''){
+		if (!skip){ 
+		Col=editor.ActiveDocument.selection.GetActivePointX(eePosView);
+		Row=editor.ActiveDocument.selection.GetActivePointY(eePosView);
+		editor.ActiveDocument.selection.SelectAll();
+		rcode = editor.ActiveDocument.selection.Text;
+		editor.ActiveDocument.selection.SetActivePoint(eePosView,Col,Row); //reset cursor to where it was prior to selectAll
+		}
+	}	
+	return rcode;
+}
+function SendRCommand(pid,rcmd,rcode) {
+	if (pid>0) {
+		WshShell = new ActiveXObject( "WScript.Shell" )
+		WshShell.AppActivate (pid);
+		sleep(500);
+		if(rcode){
+			SendRC = rcmd + '+9' + rcode + '+0 ~'
+		} else {
+			SendRC = rcmd + ' ~'
+		}
+		WshShell.SendKeys( SendRC ) ;
+	} else {
+		OutputBar.Writeln("No instance of R seems to be running")
+	}
+}
+
+function SourceR(pid,doc) {
+	if (pid>0) {
+		doc = (doc.replace(/\\/g,'/')).replace(/~/g,'{~}');
+		WshShell = new ActiveXObject( "WScript.Shell" )
+		WshShell.AppActivate (pid);
+		sleep(500);
+		reuseexec = 'source+9' + '"' + doc + '"' + ',echo=TRUE,keep.source=TRUE+0 ~';
+		WshShell.SendKeys( reuseexec ) 
+		sleep(100);
+	} else {
+		OutputBar.Visible = true;
+		OutputBar.Writeln("No instance of R seems to be running")
+	}
+}
+
+function getDocPath() {
+	docPath = editor.ActiveDocument.FullName;
+	if (docPath =='' || editor.ActiveDocument.selection.Text !=''){
+		docPath = createTempFile(getRCode())
+	}
+	return docPath;
+}
+
+function RunExe(rexe) {
+		var RunExeShell = new ActiveXObject( "WScript.Shell" );
+//		OutputBar.Writeln(rexepath);
+		RunExeShell.Run(rexe,1); //,1,false;
+		sleep(100);
+}
+
+function execRtoEmed(rpath,f){
+	results='';
+	exec = '"'+ rpath + 'rterm.exe" --vanilla -q --slave --file="' + f.replace(/\\/g,'/') +'"' //statement to execute
+    WshShell = new ActiveXObject( "WScript.Shell" );
+	OutputBar.Visible = true;
+    OutputBar.Clear()
+    OutputBar.Writeln(exec)
+    exec=WshShell.Exec(exec),0,true;
+    errmsg='';
+	while(!exec.stderr.AtEndOfStream){
+		errmsg = (exec.stderr.ReadAll() )
+	}
+	while(!exec.stdout.AtEndOfStream){
+		results = (exec.stdout.ReadAll() )
+	}
+	WshShell=null
+
+	if (errmsg!=''){
+	       OutputBar.Writeln(errmsg);
+	       OutputBar.Writeln(results)
+	} else {
+	       OutputBar.Writeln(results)
+	}	
+}
+
+function scrubSendKeys(skinput) {
+	return 	((skinput.replace(/\(/g,"+9")).replace(/\)/g,"+0")).replace(/~/g,'{~}');
+}
+
+function RunUpgradeR() {
+// Assists in migrating libraries from old R, to new R
+// Based on http://www.r-statistics.com/2010/04/changing-your-r-upgrading-strategy-and-the-r-code-to-do-it-on-windows/
+// http://stackoverflow.com/questions/1401904/painless-way-to-install-a-new-version-of-r
+// http://cran.r-project.org/bin/windows/base/rw-FAQ.html#What_0027s-the-best-way-to-upgrade_003f
+//1) download new R and install   rcmd = (sort(.packages(all.available = TRUE)))
+//2) copy the “library” content from the old R to the new R
+//3) upgrade all of the packages (in the library folder) to the new version of R.  rcmd = update.packages(checkBuilt=TRUE, ask=FALSE)
+
+}

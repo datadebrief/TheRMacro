@@ -1,0 +1,203 @@
+﻿#icon = "C:\Program Files\R\R-2.11.0\bin\R.exe",0
+#title = "The R Macro"
+#include "thermacrofunctions.jsee"
+
+rbin = 'C:\\Program Files\\R\\R-2.11.0\\bin\\'  //full path to r bin directory
+
+// toggle menu states if no R or no text selected
+RGuiRunning = getProcID(1,true)>0?true:false
+RTermRunning = getProcID(2,true)>0?true:false 
+Rrunning = (RGuiRunning||RTermRunning)
+Rmstate = Rrunning?0:eeMenuGrayed
+RGuimstate = RGuiRunning?0:eeMenuGrayed
+RTermmstate = RTermRunning?0:eeMenuGrayed
+Rsubmstate = (Rrunning && getRCode(true))?0:eeMenuGrayed
+
+menu = CreatePopupMenu();
+
+RLoadInmenu = CreatePopupMenu();
+RLoadInmenu.Add( "R Gui", 1 ,RGuimstate);
+RLoadInmenu.Add( "R Term", 2 ,RTermmstate);
+
+RFuncmenu = CreatePopupMenu();
+RFuncmenu.Add( "Help", 900 , Rsubmstate);
+RFuncmenu.Add( "Summary", 910, Rsubmstate );
+RFuncmenu.Add( "Head", 911, Rsubmstate );
+RFuncmenu.Add( "Tail", 912, Rsubmstate );
+RFuncmenu.Add( "Structure", 913, Rsubmstate );
+RFuncmenu.Add( "ls.str", 914,Rmstate );
+
+RLoadDatasubmenu =  CreatePopupMenu();
+RLoadDatasubmenu.Add( "Choose file ...", 1000 ,Rmstate);
+RLoadDatasubmenu.Add( "Load this file (csv)", 1001 ,Rmstate);
+RLoadDatasubmenu.Add( "Load  this file (tsv)", 1002,Rmstate );
+
+RQuickPlotsubmenu =  CreatePopupMenu();
+RQuickPlotsubmenu.Add( "Plot", 1100,Rsubmstate );
+RQuickPlotsubmenu.Add( "Histogram", 1101,Rsubmstate );
+RQuickPlotsubmenu.Add( "BarPlot", 1102,Rsubmstate );
+RQuickPlotsubmenu.Add( "DotChart", 1103,Rsubmstate );
+RQuickPlotsubmenu.Add( "BoxPlot", 1104,Rsubmstate );
+
+RGuisubmenu = CreatePopupMenu();
+RGuisubmenu.Add( "Start", 20 );
+RGuisubmenu.Add( "Quit (save)", 21 ,RGuimstate);
+RGuisubmenu.Add( "Quit (no save)", 22,RGuimstate );
+RGuisubmenu.Add( "Clear", 23 ,RGuimstate);
+
+RTermsubmenu = CreatePopupMenu();
+RTermsubmenu.Add( "Start", 30 );
+RTermsubmenu.Add( "Quit (save)", 31 ,RTermmstate);
+RTermsubmenu.Add( "Quit (no save)", 32 ,RTermmstate);
+//RTermsubmenu.Add( "Clear", 33 );
+RTermsubmenu.Add( "", 0, eeMenuSeparator );
+RTermsubmenu.Add( "Exec script to Emeditor output", 34 );
+
+Rsubmenu = CreatePopupMenu();
+Rsubmenu.Add( "R Help (local)", 100 ,Rmstate);
+Rsubmenu.Add( "R Installed Packages (local)", 101 ,Rmstate);
+Rsubmenu.Add( "R Installed Packages (verbose)", 106 ,Rmstate);
+Rsubmenu.Add( "R Packages (CRAN) ", 102 ,Rmstate);
+Rsubmenu.Add( "", 0, eeMenuSeparator );
+Rsubmenu.Add( "R Website (Online)", 103 );
+Rsubmenu.Add( "R Search (Online)", 104 );
+Rsubmenu.Add( "R Browse CRAN (Online)", 105 );
+Rsubmenu.Add( "R Reference Card (PDF,Online)", 107 );
+Rsubmenu.Add( "", 0, eeMenuSeparator );
+Rsubmenu.Add( "R Upgrade R (requires old+new R)", 108 );
+
+menu.Add( "Send source to R (any)",3,Rmstate);
+menu.AddPopup( "Send source to ", RLoadInmenu );
+menu.AddPopup( "R Functions", RFuncmenu);
+RFuncmenu.AddPopup( "Load data file",RLoadDatasubmenu)
+RFuncmenu.AddPopup( "Quick plots",RQuickPlotsubmenu) //
+menu.Add( "", 0, eeMenuSeparator );
+menu.AddPopup( "RGui", RGuisubmenu );
+menu.AddPopup( "RTerm", RTermsubmenu );
+menu.AddPopup( "R", Rsubmenu );
+
+OutputBar.Clear();
+
+switch (menu.Track(eePosMouse)) {
+	case 0: break;
+	case 1: //run source in rgui
+			SourceR(getProcID(1),getDocPath());
+			break;
+	case 2: //run source in rterm
+			SourceR(getProcID(2),getDocPath());
+			break;
+	case 3: //run source in any running R instance (rgui or rterm)
+			SourceR(getAnyPid(),getDocPath());
+			break;
+	case 20: // start rgui
+			rexe = 'rgui.exe\" \"--internet2'
+			rexepath = '"'+rbin+''+rexe + '"';
+			RunExe(rexepath)
+			break;
+	case 21: // quit with save workspace for rgui
+			SendRCommand(getProcID(1),'q','"yes"');
+			break;
+	case 22: // quit with nosave workspace for rgui
+			SendRCommand(getProcID(1),'q','"no"');
+			break;
+	case 23: //  ctrl + L for rgui
+			SendRCommand(getProcID(1),'^L');
+			break;
+	case 30: // start rterm
+			rexe = 'rterm.exe\" \"--internet2'
+			rexepath = '"'+rbin+''+rexe + '"';
+			RunExe(rexepath)
+			break;
+	case 31: // quit with save workspace for rgui
+			SendRCommand(getProcID(2),'q','"yes"');
+			break;
+	case 32: 
+			SendRCommand(getProcID(2),'q','"no"');
+			break;
+	case 33: // ctrl + L
+			SendRCommand(getProcID(2),'^L');
+			break;
+	case 34: // run script in rterm and exit
+			execRtoEmed(rbin,getDocPath());
+			break;
+	case 100: 
+			SendRCommand(getAnyPid(),scrubSendKeys('help.start()'));
+			break;
+	case 101:
+			SendRCommand(getAnyPid(),scrubSendKeys('.libPaths(); (sort(.packages(all.available = TRUE)))'));
+			break; // 
+	case 102:
+			SendRCommand(getProcID(2),scrubSendKeys('utils:::menuInstallPkgs()'));
+			break; 
+	case 103:
+			RunExe('http://www.r.org/')
+			break; 
+	case 104:
+			RunExe('http://cran.r-project.org/search.html') //http://www.rseek.org/
+			break; 
+	case 105:
+			RunExe('http://cran.r-project.org/web/views/')
+			break; //installed.packages
+	case 106:
+			SendRCommand(getAnyPid(),scrubSendKeys('installed.packages()'));
+			break; //	
+	case 107:
+			RunExe('http://cran.r-project.org/doc/contrib/Short-refcard.pdf')
+			break; //			
+	case 108:
+			RunUpgradeR()
+			break; //			
+
+	case 900: //run help(x) in gui or term
+			SendRCommand(getAnyPid(),'help',scrubSendKeys(getRCode(true)))
+			break;	
+	case 910: //run help(x) in gui or term
+			SendRCommand (getAnyPid(),'summary',scrubSendKeys(getRCode(true)))
+			break;	
+	case 911: 
+			SendRCommand (getAnyPid(),'head',scrubSendKeys(getRCode(true)))
+			break;	
+	case 912: 
+			SendRCommand (getAnyPid(),'tail',scrubSendKeys(getRCode(true)))
+			break;	
+	case 913: 
+			SendRCommand (getAnyPid(),'str',scrubSendKeys(getRCode(true)))
+			break;	
+	case 914: 
+			SendRCommand (getAnyPid(),scrubSendKeys('ls.str()'))
+			break;	
+			
+	case 1000:
+			SendRCommand(getAnyPid(),scrubSendKeys('mydatafile <- read.table(file.choose()); str(mydatafile)'));
+			break; 
+	case 1001:
+			f = (editor.ActiveDocument.FullName).replace(/\\/g,'/')
+			varname = (editor.ActiveDocument.Name).substring(0,30)
+			SendRCommand(getAnyPid(),scrubSendKeys(varname + ' <- read.csv("'+f+'"); str(' + varname + ')'));
+			break; 
+	case 1002:
+			f = (editor.ActiveDocument.FullName).replace(/\\/g,'/')
+			varname = (editor.ActiveDocument.Name).substring(0,30)
+			SendRCommand(getAnyPid(),scrubSendKeys(varname + ' <- read.table("' + f + '", sep="\t"); str(' + varname + ')'));
+			break; 
+	case 1100:
+			SendRCommand (getAnyPid(),'plot',scrubSendKeys(getRCode(true)))
+			break; 
+	case 1101:
+			SendRCommand (getAnyPid(),'hist',scrubSendKeys(getRCode(true)))
+			break; 
+	case 1102:
+			SendRCommand (getAnyPid(),'barplot',scrubSendKeys(getRCode(true)))
+			break; 
+	case 1103:
+			SendRCommand (getAnyPid(),'dotchart',scrubSendKeys(getRCode(true)))
+			break; 
+	case 1104:
+			SendRCommand (getAnyPid(),'boxplot',scrubSendKeys(getRCode(true)))
+			break; 
+
+	default:
+			OutputBar.Visible = true;
+			OutputBar.Writeln("ERROR: Menu selection not found")
+}
+
