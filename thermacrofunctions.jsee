@@ -1,4 +1,19 @@
-﻿function getProcID(sourcetype,skip) {
+﻿function startR(which){
+	switch (which){
+			case 1:
+				rexe = 'rgui.exe\" --internet2'
+				rexepath = '"'+rbin+''+rexe
+				RunExe(rexepath)
+				break;
+			case 2:
+				rexe = 'rterm.exe\" --internet2'
+				rexepath = '"'+rbin+''+rexe
+				RunExe(rexepath)			
+				break;
+	}
+}
+
+function getProcID(sourcetype,skip) {
 	rpid=0;
 	skip?true:false;
 	switch (sourcetype) {
@@ -22,10 +37,6 @@
 	return rpid;	
 }
 
-function getAnyPid(skip) {
-	guipid = getProcID(1,skip);
-	return guipid!=0?guipid:getProcID(2,skip);
-}
 
 function getChildProcID(parentWnd) {
 	// Required to find console running in RGui
@@ -40,6 +51,11 @@ function getChildProcID(parentWnd) {
 		}	
 	}
 	return childWnd;
+}
+
+function getAnyPid(skip) {
+	guipid = getProcID(1,skip);
+	return guipid!=0?guipid:getProcID(2,skip);
 }
 
 function createTempFile(rcode) {
@@ -94,21 +110,6 @@ function SendRCommand(pid,rcmd,rcode) {
 	}
 }
 
-function SourceR(pid,doc) {
-	if (pid>0) {
-		doc = (doc.replace(/\\/g,'/')).replace(/~/g,'{~}');
-		WshShell = new ActiveXObject( "WScript.Shell" )
-		WshShell.AppActivate (pid);
-		sleep(500);
-		reuseexec = 'source+9' + '"' + doc + '"' + ',echo=TRUE,keep.source=TRUE+0 ~';
-		WshShell.SendKeys( reuseexec ) 
-		sleep(100);
-	} else {
-		OutputBar.Visible = true;
-		OutputBar.Writeln("No instance of R seems to be running")
-	}
-}
-
 function getDocPath() {
 	docPath = editor.ActiveDocument.FullName;
 	if (docPath =='' || editor.ActiveDocument.selection.Text !=''){
@@ -152,6 +153,33 @@ function execRtoEmed(rpath,f){
 function scrubSendKeys(skinput) {
 	return 	((skinput.replace(/\(/g,"+9")).replace(/\)/g,"+0")).replace(/~/g,'{~}');
 }
+
+function loadDataFile(f,delim){
+	loadstring =''
+	varname='datafile'
+	if(f){
+		f = '"'+f+'"'
+		varname = (editor.ActiveDocument.Name).substring(0,30)
+	} else {	
+		f='file.choose()'
+	}
+	delim?delim:''
+	switch (delim) {
+	case ',':
+		loadstring = varname + ' <- read.csv('+ f + '); str(' + varname + ')'
+		break;
+	case ';':
+		loadstring = varname + ' <- read.csv2('+ f + '); str(' + varname + ')'
+		break;
+	case '\t':
+		loadstring = varname + ' <- read.delim('+ f + '); str(' + varname + ')'
+		break;
+	default:
+		loadstring = varname + ' <- read.table('+ f + ', sep = "' + delim + '"); str(' + varname + ')'
+	}
+	return loadstring;
+}
+
 
 function RunUpgradeR() {
 // Assists in migrating libraries from old R, to new R

@@ -7,11 +7,24 @@ rbin = 'C:\\Program Files\\R\\R-2.11.0\\bin\\'  //full path to r bin directory
 // toggle menu states if no R or no text selected
 RGuiRunning = getProcID(1,true)>0?true:false
 RTermRunning = getProcID(2,true)>0?true:false 
-Rrunning = (RGuiRunning||RTermRunning)
-Rmstate = Rrunning?0:eeMenuGrayed
+RRunning = (RGuiRunning||RTermRunning)
+Rmstate = RRunning?0:eeMenuGrayed
 RGuimstate = RGuiRunning?0:eeMenuGrayed
 RTermmstate = RTermRunning?0:eeMenuGrayed
-Rsubmstate = (Rrunning && getRCode(true))?0:eeMenuGrayed
+Rsubmstate = (RRunning && getRCode(true))?0:eeMenuGrayed
+AutoStart = editor.GetProfileInt( eeRegCommon, "thermacro", "AutoStart", 0 )
+switch (AutoStart){
+	case 1: //auto rgui
+		RGuimstate=0
+		Rmstate=0
+		break;
+	case 2:
+		RTermmstate = 0
+		Rmstate=0
+		break;
+	default:
+		break;
+}
 
 menu = CreatePopupMenu();
 
@@ -21,14 +34,17 @@ RLoadInmenu.Add( "R Term", 2 ,RTermmstate);
 
 RFuncmenu = CreatePopupMenu();
 RFuncmenu.Add( "Help", 900 , Rsubmstate);
+RFuncmenu.Add( "Help (search)", 901 , Rsubmstate);
 RFuncmenu.Add( "Summary", 910, Rsubmstate );
 RFuncmenu.Add( "Head", 911, Rsubmstate );
 RFuncmenu.Add( "Tail", 912, Rsubmstate );
 RFuncmenu.Add( "Structure", 913, Rsubmstate );
-RFuncmenu.Add( "ls.str", 914,Rmstate );
+RFuncmenu.Add( "List Objects", 914,Rmstate );
 
 RLoadDatasubmenu =  CreatePopupMenu();
-RLoadDatasubmenu.Add( "Choose file ...", 1000 ,Rmstate);
+RLoadDatasubmenu.Add( "Load file (csv) ...", 1000 ,Rmstate);
+RLoadDatasubmenu.Add( "Load file (delim) ...", 1003 ,Rmstate);
+RLoadDatasubmenu.Add( "", 0, eeMenuSeparator );
 RLoadDatasubmenu.Add( "Load this file (csv)", 1001 ,Rmstate);
 RLoadDatasubmenu.Add( "Load  this file (tsv)", 1002,Rmstate );
 
@@ -64,49 +80,76 @@ Rsubmenu.Add( "R Search (Online)", 104 );
 Rsubmenu.Add( "R Browse CRAN (Online)", 105 );
 Rsubmenu.Add( "R Reference Card (PDF,Online)", 107 );
 Rsubmenu.Add( "", 0, eeMenuSeparator );
-Rsubmenu.Add( "R Upgrade R (requires old+new R)", 108 );
+//Rsubmenu.Add( "R Upgrade (requires old+new R)", 108 ,eeMenuGrayed);
 
-menu.Add( "Send source to R (any)",3,Rmstate);
-menu.AddPopup( "Send source to ", RLoadInmenu );
+RMacroOptionsmenu = CreatePopupMenu();
+RMacroOptionsAutoStartmenu = CreatePopupMenu(); 
+RMacroOptionsmenu.AddPopup( "Auto start", RMacroOptionsAutoStartmenu)
+switch (AutoStart){
+	case 1:
+		RMacroOptionsAutoStartmenu.Add( "Auto start R Gui", 9001,eeMenuChecked)
+		RMacroOptionsAutoStartmenu.Add( "Auto start R Term", 9002)
+		RMacroOptionsAutoStartmenu.Add( "Do not auto start", 9003)
+		break;	
+	case 2:
+		RMacroOptionsAutoStartmenu.Add( "Auto start R Gui", 9001)
+		RMacroOptionsAutoStartmenu.Add( "Auto start R Term", 9002,eeMenuChecked)
+		RMacroOptionsAutoStartmenu.Add( "Do not auto start", 9003)
+		break;
+	default:
+		RMacroOptionsAutoStartmenu.Add( "Auto start R Gui", 9001)
+		RMacroOptionsAutoStartmenu.Add( "Auto start R Term", 9002)
+		RMacroOptionsAutoStartmenu.Add( "Do not auto start", 9003,eeMenuChecked)
+}
+
+
+menu.Add( "Send as source to R (any)",3,Rmstate);
+menu.AddPopup( "Send as source to ", RLoadInmenu );
+menu.Add( "", 0, eeMenuSeparator );
 menu.AddPopup( "R Functions", RFuncmenu);
-RFuncmenu.AddPopup( "Load data file",RLoadDatasubmenu)
+RFuncmenu.Add( "", 0, eeMenuSeparator );
+RFuncmenu.AddPopup( "Quick load data file",RLoadDatasubmenu)
+RFuncmenu.Add( "", 0, eeMenuSeparator );
 RFuncmenu.AddPopup( "Quick plots",RQuickPlotsubmenu) //
 menu.Add( "", 0, eeMenuSeparator );
-menu.AddPopup( "RGui", RGuisubmenu );
-menu.AddPopup( "RTerm", RTermsubmenu );
+menu.AddPopup( "R Gui", RGuisubmenu );
+menu.AddPopup( "R Term", RTermsubmenu );
+menu.Add( "", 0, eeMenuSeparator );
 menu.AddPopup( "R", Rsubmenu );
+menu.Add( "", 0, eeMenuSeparator );
+menu.AddPopup( "Options", RMacroOptionsmenu );
+
 
 OutputBar.Clear();
 
 switch (menu.Track(eePosMouse)) {
 	case 0: break;
 	case 1: //run source in rgui
-			SourceR(getProcID(1),getDocPath());
+			if(AutoStart==1 && !RGuiRunning) {startR(AutoStart); sleep(1000)}
+			SendRCommand(getProcID(1,false),'source','"' + ((getDocPath()).replace(/\\/g,'/')).replace(/~/g,'{~}') + '",echo=TRUE,keep.source=TRUE');			
 			break;
 	case 2: //run source in rterm
-			SourceR(getProcID(2),getDocPath());
+			if(AutoStart==2 && !RTermRunning) {startR(AutoStart); sleep(1000)}
+			SendRCommand(getProcID(2),'source','"' + ((getDocPath()).replace(/\\/g,'/')).replace(/~/g,'{~}') + '",echo=TRUE,keep.source=TRUE');			
 			break;
 	case 3: //run source in any running R instance (rgui or rterm)
-			SourceR(getAnyPid(),getDocPath());
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
+			SendRCommand(getAnyPid(),'source','"' + ((getDocPath()).replace(/\\/g,'/')).replace(/~/g,'{~}') + '",echo=TRUE,keep.source=TRUE');			
 			break;
 	case 20: // start rgui
-			rexe = 'rgui.exe\" \"--internet2'
-			rexepath = '"'+rbin+''+rexe + '"';
-			RunExe(rexepath)
+			startR(1)
 			break;
 	case 21: // quit with save workspace for rgui
-			SendRCommand(getProcID(1),'q','"yes"');
+			SendRCommand(getProcID(1,false),'q','"yes"');
 			break;
 	case 22: // quit with nosave workspace for rgui
-			SendRCommand(getProcID(1),'q','"no"');
+			SendRCommand(getProcID(1,false),'q','"no"');
 			break;
 	case 23: //  ctrl + L for rgui
-			SendRCommand(getProcID(1),'^L');
+			SendRCommand(getProcID(1,false),'^L');
 			break;
 	case 30: // start rterm
-			rexe = 'rterm.exe\" \"--internet2'
-			rexepath = '"'+rbin+''+rexe + '"';
-			RunExe(rexepath)
+			startR(2)
 			break;
 	case 31: // quit with save workspace for rgui
 			SendRCommand(getProcID(2),'q','"yes"');
@@ -115,18 +158,21 @@ switch (menu.Track(eePosMouse)) {
 			SendRCommand(getProcID(2),'q','"no"');
 			break;
 	case 33: // ctrl + L
-			SendRCommand(getProcID(2),'^L');
+			SendRCommand(getProcID(2),'\014');
 			break;
 	case 34: // run script in rterm and exit
 			execRtoEmed(rbin,getDocPath());
 			break;
 	case 100: 
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),scrubSendKeys('help.start()'));
 			break;
 	case 101:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),scrubSendKeys('.libPaths(); (sort(.packages(all.available = TRUE)))'));
 			break; // 
 	case 102:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getProcID(2),scrubSendKeys('utils:::menuInstallPkgs()'));
 			break; 
 	case 103:
@@ -137,8 +183,9 @@ switch (menu.Track(eePosMouse)) {
 			break; 
 	case 105:
 			RunExe('http://cran.r-project.org/web/views/')
-			break; //installed.packages
+			break; 
 	case 106:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),scrubSendKeys('installed.packages()'));
 			break; //	
 	case 107:
@@ -149,53 +196,82 @@ switch (menu.Track(eePosMouse)) {
 			break; //			
 
 	case 900: //run help(x) in gui or term
-			SendRCommand(getAnyPid(),'help',scrubSendKeys(getRCode(true)))
-			break;	
-	case 910: //run help(x) in gui or term
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
+			SendRCommand(getAnyPid(),'help +9"'+scrubSendKeys(getRCode(true))+'"+0')
+			break;
+	case 901: //run help.search(x) in gui or term
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
+			SendRCommand(getAnyPid(),'help.search+9"'+scrubSendKeys(getRCode(true))+'"+0') //  // add help.search("linear models")
+			break;
+	case 910:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'summary',scrubSendKeys(getRCode(true)))
 			break;	
 	case 911: 
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'head',scrubSendKeys(getRCode(true)))
 			break;	
 	case 912: 
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'tail',scrubSendKeys(getRCode(true)))
 			break;	
 	case 913: 
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'str',scrubSendKeys(getRCode(true)))
 			break;	
 	case 914: 
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),scrubSendKeys('ls.str()'))
 			break;	
 			
 	case 1000:
-			SendRCommand(getAnyPid(),scrubSendKeys('mydatafile <- read.table(file.choose()); str(mydatafile)'));
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
+			SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile('',',')))
 			break; 
 	case 1001:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			f = (editor.ActiveDocument.FullName).replace(/\\/g,'/')
-			varname = (editor.ActiveDocument.Name).substring(0,30)
-			SendRCommand(getAnyPid(),scrubSendKeys(varname + ' <- read.csv("'+f+'"); str(' + varname + ')'));
+			SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile(f,',')))
 			break; 
 	case 1002:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			f = (editor.ActiveDocument.FullName).replace(/\\/g,'/')
-			varname = (editor.ActiveDocument.Name).substring(0,30)
-			SendRCommand(getAnyPid(),scrubSendKeys(varname + ' <- read.table("' + f + '", sep="\t"); str(' + varname + ')'));
+			SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile(f,'\t')))
 			break; 
+	case 1003:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
+			delim = prompt( "Enter delimiting character", "," );
+			if (delim!=''){	SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile('',delim))) }
+			break;
 	case 1100:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'plot',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1101:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'hist',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1102:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'barplot',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1103:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'dotchart',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1104:
+			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'boxplot',scrubSendKeys(getRCode(true)))
 			break; 
-
+	case 9001:
+			editor.WriteProfileInt( eeRegCommon, "thermacro", "AutoStart", 1 )
+			break; 
+	case 9002:
+			editor.WriteProfileInt( eeRegCommon, "thermacro", "AutoStart", 2 )
+			break; 
+	case 9003:
+			editor.WriteProfileInt( eeRegCommon, "thermacro", "AutoStart", 0 )
+			break; 
 	default:
 			OutputBar.Visible = true;
 			OutputBar.Writeln("ERROR: Menu selection not found")
