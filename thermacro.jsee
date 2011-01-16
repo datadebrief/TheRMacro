@@ -5,7 +5,7 @@
 rbin = 'C:\\Program Files\\R\\R-2.11.0\\bin\\'  //full path to r bin directory
 
 // toggle menu states if no R or no text selected
-RGuiRunning = getProcID(1,true)>0?true:false
+RGuiRunning = getProcID(1,false)>0?true:false
 RTermRunning = getProcID(2,true)>0?true:false 
 RRunning = (RGuiRunning||RTermRunning)
 Rmstate = RRunning?0:eeMenuGrayed
@@ -121,19 +121,21 @@ menu.AddPopup( "Options", RMacroOptionsmenu );
 
 
 OutputBar.Clear();
+mnuChoice = menu.Track(eePosMouse)
 
-switch (menu.Track(eePosMouse)) {
+if (AutoStart > 0 && mnuChoice > 0 && (mnuChoice < 20 || mnuChoice > 30) && mnuChoice < 9000 ){
+	if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
+}
+
+switch (mnuChoice) {
 	case 0: break;
 	case 1: //run source in rgui
-			if(AutoStart==1 && !RGuiRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getProcID(1,false),'source','"' + ((getDocPath()).replace(/\\/g,'/')).replace(/~/g,'{~}') + '",echo=TRUE,keep.source=TRUE');			
 			break;
 	case 2: //run source in rterm
-			if(AutoStart==2 && !RTermRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getProcID(2),'source','"' + ((getDocPath()).replace(/\\/g,'/')).replace(/~/g,'{~}') + '",echo=TRUE,keep.source=TRUE');			
 			break;
 	case 3: //run source in any running R instance (rgui or rterm)
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),'source','"' + ((getDocPath()).replace(/\\/g,'/')).replace(/~/g,'{~}') + '",echo=TRUE,keep.source=TRUE');			
 			break;
 	case 20: // start rgui
@@ -164,15 +166,12 @@ switch (menu.Track(eePosMouse)) {
 			execRtoEmed(rbin,getDocPath());
 			break;
 	case 100: 
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),scrubSendKeys('help.start()'));
 			break;
 	case 101:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),scrubSendKeys('.libPaths(); (sort(.packages(all.available = TRUE)))'));
 			break; // 
 	case 102:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getProcID(2),scrubSendKeys('utils:::menuInstallPkgs()'));
 			break; 
 	case 103:
@@ -185,7 +184,6 @@ switch (menu.Track(eePosMouse)) {
 			RunExe('http://cran.r-project.org/web/views/')
 			break; 
 	case 106:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),scrubSendKeys('installed.packages()'));
 			break; //	
 	case 107:
@@ -196,71 +194,55 @@ switch (menu.Track(eePosMouse)) {
 			break; //			
 
 	case 900: //run help(x) in gui or term
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),'help +9"'+scrubSendKeys(getRCode(true))+'"+0')
 			break;
 	case 901: //run help.search(x) in gui or term
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),'help.search+9"'+scrubSendKeys(getRCode(true))+'"+0') //  // add help.search("linear models")
 			break;
 	case 910:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'summary',scrubSendKeys(getRCode(true)))
 			break;	
 	case 911: 
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'head',scrubSendKeys(getRCode(true)))
 			break;	
 	case 912: 
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'tail',scrubSendKeys(getRCode(true)))
 			break;	
 	case 913: 
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'str',scrubSendKeys(getRCode(true)))
 			break;	
 	case 914: 
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),scrubSendKeys('ls.str()'))
 			break;	
 			
 	case 1000:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile('',',')))
 			break; 
 	case 1001:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			f = (editor.ActiveDocument.FullName).replace(/\\/g,'/')
 			SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile(f,',')))
 			break; 
 	case 1002:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			f = (editor.ActiveDocument.FullName).replace(/\\/g,'/')
 			SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile(f,'\t')))
 			break; 
 	case 1003:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			delim = prompt( "Enter delimiting character", "," );
 			if (delim!=''){	SendRCommand(getAnyPid(),scrubSendKeys(loadDataFile('',delim))) }
 			break;
 	case 1100:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'plot',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1101:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'hist',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1102:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'barplot',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1103:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'dotchart',scrubSendKeys(getRCode(true)))
 			break; 
 	case 1104:
-			if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
 			SendRCommand (getAnyPid(),'boxplot',scrubSendKeys(getRCode(true)))
 			break; 
 	case 9001:

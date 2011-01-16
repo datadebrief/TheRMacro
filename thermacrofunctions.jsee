@@ -20,11 +20,8 @@ function getProcID(sourcetype,skip) {
 	case 1: // RGui
 		rguipid = shell.FindWindow("Rgui Workspace", "");
 		if (rguipid) {
-			!skip?sleep(100):false
 			rpid = getChildProcID(rguipid)
-		} else {
-			rpid=0;
-		}
+		} 
 		break;
 	case 2: // rterm
 		rtm = shell.FindWindow("ConsoleWindowClass","Rterm")
@@ -33,10 +30,8 @@ function getProcID(sourcetype,skip) {
 	default: 
 		rpid=0; 
 	}
-//	!skip?sleep(300):false;
 	return rpid;	
 }
-
 
 function getChildProcID(parentWnd) {
 	// Required to find console running in RGui
@@ -54,7 +49,7 @@ function getChildProcID(parentWnd) {
 }
 
 function getAnyPid(skip) {
-	guipid = getProcID(1,skip);
+	guipid = getProcID(1);
 	return guipid!=0?guipid:getProcID(2,skip);
 }
 
@@ -97,14 +92,14 @@ function getRCode(skipSelectAll){
 function SendRCommand(pid,rcmd,rcode) {
 	if (pid>0) {
 		WshShell = new ActiveXObject( "WScript.Shell" )
-		WshShell.AppActivate (pid);
-		sleep(500);
 		if(rcode){
 			SendRC = rcmd + '+9' + rcode + '+0 ~'
 		} else {
 			SendRC = rcmd + ' ~'
 		}
-		WshShell.SendKeys( SendRC ) ;
+		WshShell.AppActivate (pid);
+		sleep(300)
+		WshShell.SendKeys( SendRC ) 
 	} else {
 		OutputBar.Writeln("No instance of R seems to be running")
 	}
