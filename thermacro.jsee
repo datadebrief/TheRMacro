@@ -124,7 +124,7 @@ OutputBar.Clear();
 mnuChoice = menu.Track(eePosMouse)
 
 if (AutoStart > 0 && mnuChoice > 0 && (mnuChoice < 20 || mnuChoice > 30) && mnuChoice < 9000 ){
-	if(AutoStart>0 && !RRunning) {startR(AutoStart); sleep(1000)}
+	if(!RRunning) {startR(AutoStart); sleep(1000)}
 }
 
 switch (mnuChoice) {
