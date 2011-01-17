@@ -56,6 +56,7 @@ RQuickPlotsubmenu.Add( "Histogram", 1101,Rsubmstate );
 RQuickPlotsubmenu.Add( "BarPlot", 1102,Rsubmstate );
 RQuickPlotsubmenu.Add( "DotChart", 1103,Rsubmstate );
 RQuickPlotsubmenu.Add( "BoxPlot", 1104,Rsubmstate );
+RQuickPlotsubmenu.Add( "DensityPlot", 1105,Rsubmstate );
 
 RGuisubmenu = CreatePopupMenu();
 RGuisubmenu.Add( "Start", 20 );
@@ -247,6 +248,9 @@ switch (mnuChoice) {
 	case 1104:
 			SendRCommand (getAnyPid(),'boxplot',scrubSendKeys(getRCode(true)))
 			break; 
+	case 1105:
+			SendRCommand (getAnyPid(),scrubSendKeys('plot(density(' + (getRCode(true)) + '))'))
+			break;
 	case 9001:
 			editor.WriteProfileInt( eeRegCommon, "thermacro", "AutoStart", 1 )
 			break; 
