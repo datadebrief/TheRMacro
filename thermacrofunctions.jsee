@@ -90,19 +90,19 @@ function getRCode(skipSelectAll){
 	return rcode;
 }
 function SendRCommand(pid,rcmd,rcode) {
+	retry = 0
 	if (pid>0) {
 		WshShell = new ActiveXObject( "WScript.Shell" )
 		if(rcode){
 			SendRC = rcmd + '+9' + rcode + '+0 ~'
 		} else {
-			SendRC = rcmd + ' ~'
-		}
-		WshShell.AppActivate (pid);
-		sleep(300)
+			SendRC = rcmd + ' ~'}
+	if ((shell.ForegroundWindow).ProcessID != pid) { WshShell.AppActivate (pid)}
+		while ((shell.ForegroundWindow).ProcessID != pid || retry > 10) {sleep(100); retry++}
 		WshShell.SendKeys( SendRC ) 
+		sleep(100)
 	} else {
-		OutputBar.Writeln("No instance of R seems to be running")
-	}
+		OutputBar.Writeln("No instance of R seems to be running") }
 }
 
 function getDocPath() {

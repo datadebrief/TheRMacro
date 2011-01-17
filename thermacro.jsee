@@ -17,10 +17,12 @@ switch (AutoStart){
 	case 1: //auto rgui
 		RGuimstate=0
 		Rmstate=0
+		Rsubmstate = (getRCode(true))?0:eeMenuGrayed
 		break;
 	case 2:
 		RTermmstate = 0
 		Rmstate=0
+		Rsubmstate = (getRCode(true))?0:eeMenuGrayed
 		break;
 	default:
 		break;
@@ -123,7 +125,7 @@ menu.AddPopup( "Options", RMacroOptionsmenu );
 OutputBar.Clear();
 mnuChoice = menu.Track(eePosMouse)
 
-if (AutoStart > 0 && mnuChoice > 0 && (mnuChoice < 20 || mnuChoice > 30) && mnuChoice < 9000 ){
+if (AutoStart > 0 && mnuChoice > 0 && (mnuChoice < 20 || mnuChoice > 30) && mnuChoice != 34 && mnuChoice < 9000 ){
 	if(!RRunning) {startR(AutoStart); sleep(1000)}
 }
 
