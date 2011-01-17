@@ -178,7 +178,7 @@ switch (mnuChoice) {
 			SendRCommand(getProcID(2),scrubSendKeys('utils:::menuInstallPkgs()'));
 			break; 
 	case 103:
-			RunExe('http://www.r.org/')
+			RunExe('http://www.r-project.org/')
 			break; 
 	case 104:
 			RunExe('http://cran.r-project.org/search.html') //http://www.rseek.org/

@@ -1,0 +1,36 @@
+The <span style="font-size:2em;color=blue"><a href="http://www.r-project.org">R</a></span> Macro for <a href="http://www.emeditor.com"><span style="font-size:2em;color=red">Em</span><span style="font-size:2em;color=gray">Editor</span></a>
+
+
+* <a href="#overview">Overview</a>
+* <a href="#getstarted">Getting started with TheRMacro</a>
+* <a href="#docs">Documentation</a>
+* <a href="#build">Modifying TheRMacro</a>
+* <a href="#depends">Dependencies</a>
+
+<a name="overview"></a>
+
+h2. Overview
+
+This is a macro that can be utilised by the Windows text editor EmEditor, to provide functionality for running scripts in the R Statistical Environment.
+
+<a name="getstarted"></a>
+
+h2. Getting started with TheRMacro
+
+1. Download and install EmEditor if it is not already installed
+2. Download and install R, or RandFriends (this comes with support for MS and Open Office)
+3. Download TheRMacro, by clicking on the "Downloads" link and selecting the zip format
+4. Extract the zip file to your "My Macros" (or similar) directory
+5. Launch EmEditor and select the Macros menu; then "customize"; then "new". Select "thermacro.jsee" ONLY. Click ok.
+6. You may need to edit two variables in the macro, "#icon" and "rbin"
+6.1. Click the "Macros" menu again, and select "edit thermacro";
+6.2 "#icon" - this should be the first line, the default is "C:\Program Files\R\R-2.11.0\bin\R.exe", you might need to change that depending on the path to your r.exe, don't forget to keep the trailing comma and 0. 
+6.3 "rbin" - this should be the fifth line, the default is 'C:\\Program Files\\R\\R-2.11.0\\bin\\', again, you might need to change this depending on your version of R and where it is installed. You need to put double slashes in the path and don't frget the trailing slashes.
+6.4 Click save and you should be done!
+7. To test if it can find your R executables, click on the macro and select R Gui -> Start; or R Term -> Start, and you should see the program launched. If an error occurs, it will be shown in EmEditor's output bar.
+
+<a name="docs"></a>
+
+h2. Documentation
+
+TODO
