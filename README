@@ -1,21 +1,13 @@
-The <span style="font-size:2em;color=blue"><a href="http://www.r-project.org">R</a></span> Macro for <a href="http://www.emeditor.com"><span style="font-size:2em;color=red">Em</span><span style="font-size:2em;color=gray">Editor</span></a>
+The R Macro for EmEditor
 
-
-* <a href="#overview">Overview</a>
-* <a href="#getstarted">Getting started with TheRMacro</a>
-* <a href="#docs">Documentation</a>
-* <a href="#build">Modifying TheRMacro</a>
-* <a href="#depends">Dependencies</a>
-
-<a name="overview"></a>
-
-h2. Overview
+Overview
 
 This is a macro that can be utilised by the Windows text editor EmEditor, to provide functionality for running scripts in the R Statistical Environment.
 
-<a name="getstarted"></a>
+EmEditor: http://www.emeditor.com
+R: http://www.r-project.org
 
-h2. Getting started with TheRMacro
+Getting started with TheRMacro
 
 1. Download and install EmEditor if it is not already installed
 2. Download and install R, or RandFriends (this comes with support for MS and Open Office)
@@ -29,8 +21,6 @@ h2. Getting started with TheRMacro
 6.4 Click save and you should be done!
 7. To test if it can find your R executables, click on the macro and select R Gui -> Start; or R Term -> Start, and you should see the program launched. If an error occurs, it will be shown in EmEditor's output bar.
 
-<a name="docs"></a>
-
-h2. Documentation
+Documentation
 
 TODO
