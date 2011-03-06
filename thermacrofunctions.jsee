@@ -116,7 +116,7 @@ function getDocPath() {
 function RunExe(rexe) {
 		var RunExeShell = new ActiveXObject( "WScript.Shell" );
 //		OutputBar.Writeln(rexepath);
-		RunExeShell.Run(rexe,1); //,1,false;
+		x = RunExeShell.Run(rexe,1); //,1,false;
 		sleep(100);
 }
 

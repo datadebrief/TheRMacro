@@ -1,8 +1,8 @@
-﻿#icon = "C:\Program Files\R\R-2.11.0\bin\R.exe",0
+﻿#icon = "C:\Program Files\R\R-2.12.2\bin\i386\R.exe",0
 #title = "The R Macro"
 #include "thermacrofunctions.jsee"
 
-rbin = 'C:\\Program Files\\R\\R-2.11.0\\bin\\'  //full path to r bin directory
+rbin = 'C:\\Program Files\\R\\R-2.12.2\\bin\\i386\\'  //full path to r bin directory
 
 // toggle menu states if no R or no text selected
 RGuiRunning = getProcID(1,false)>0?true:false
@@ -127,7 +127,7 @@ OutputBar.Clear();
 mnuChoice = menu.Track(eePosMouse)
 
 if (AutoStart > 0 && mnuChoice > 0 && (mnuChoice < 20 || mnuChoice > 30) && mnuChoice != 34 && mnuChoice < 9000 ){
-	if(!RRunning) {startR(AutoStart); sleep(1000)}
+	if(mnuChoice < 103 || mnuChoice > 108) { if(!RRunning) {startR(AutoStart); sleep(1000)} }
 }
 
 switch (mnuChoice) {
