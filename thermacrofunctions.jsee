@@ -21,7 +21,12 @@ function getProcID(sourcetype,skip) {
 		rguipid = shell.FindWindow("Rgui Workspace", "");
 		if (rguipid) {
 			rpid = getChildProcID(rguipid)
-		} 
+		} else {
+			rguipid = shell.FindWindow("RGui", "");
+			if(rguipid) {
+					rpid = rguipid.ProcessID
+				}
+		}
 		break;
 	case 2: // rterm
 		rtm = shell.FindWindow("ConsoleWindowClass","Rterm")
@@ -97,9 +102,12 @@ function SendRCommand(pid,rcmd,rcode) {
 			SendRC = rcmd + '+9' + rcode + '+0 ~'
 		} else {
 			SendRC = rcmd + ' ~'}
-	if ((shell.ForegroundWindow).ProcessID != pid) { WshShell.AppActivate (pid)}
-		while ((shell.ForegroundWindow).ProcessID != pid || retry > 10) {sleep(100); retry++}
-		WshShell.SendKeys( SendRC ) 
+		if ((shell.ForegroundWindow).ProcessID != pid) { 
+			WshShell.AppActivate (pid)
+			while ((shell.ForegroundWindow).ProcessID != pid || retry > 10) {sleep(100); retry++}
+		}
+		if ((shell.ForegroundWindow).ProcessID != pid) {OutputBar.Writeln("Could not send to R") }
+		else { WshShell.SendKeys( SendRC )  }
 		sleep(100)
 	} else {
 		OutputBar.Writeln("No instance of R seems to be running") }
