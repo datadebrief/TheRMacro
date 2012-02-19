@@ -18,7 +18,7 @@ function getRWnd(target) {
 	case 1: // RGui
 		rguiw = shell.FindWindow("Rgui Workspace", "");
 		if (rguiw) {
-			targwnd = getChildProcID(rguipid)
+			targwnd = getChildProcID(rguiw)
 		} else {
 			targwnd = shell.FindWindow("RGui", "");
 		}
@@ -46,7 +46,7 @@ function getChildProcID(parentWnd) {
 
 function getAnyPid(skip) {
 	guipid = getRWnd(1);
-	if (!guipid) {guipid = getRWnd(2)}
+	if (guipid) {guipid = getRWnd(1) } else {guipid = getRWnd(2)}
 	return guipid;
 }
 
@@ -94,10 +94,9 @@ function SendRCommand(wnd,rcmd,rcode) {
 			SendRC = rcmd + '+9' + rcode + '+0 ~'
 		} else {
 			SendRC = rcmd + ' ~'}
-		WshShell.AppActivate (wnd.ProcessID)
-		if ((shell.ForegroundWindow) != wnd ) {wnd.SetForeground();}
-			if ((shell.ForegroundWindow).ProcessID != wnd.ProcessID) { 
-			WshShell.AppActivate (wnd.ProcessID)
+		wnd.SetForeground();		
+		if ((shell.ForegroundWindow).ProcessID != wnd.ProcessID) { 
+			wnd.SetForeground();
 			while ((shell.ForegroundWindow).ProcessID != wnd.ProcessID || retry > 10) {sleep(100); wnd.SetForeground(); retry++}
 		}
 		WshShell.SendKeys( SendRC )
