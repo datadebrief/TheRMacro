@@ -13,30 +13,21 @@
 	}
 }
 
-function getProcID(sourcetype,skip) {
-	rpid=0;
-	skip?true:false;
-	switch (sourcetype) {
+function getRWnd(target) {
+	switch (target) {
 	case 1: // RGui
-		rguipid = shell.FindWindow("Rgui Workspace", "");
-		if (rguipid) {
-			rpid = getChildProcID(rguipid)
+		rguiw = shell.FindWindow("Rgui Workspace", "");
+		if (rguiw) {
+			targwnd = getChildProcID(rguipid)
 		} else {
-			rguipid = shell.FindWindow("RGui", "");
-			if(rguipid) {
-					rpid = rguipid.ProcessID
-				}
+			targwnd = shell.FindWindow("RGui", "");
 		}
 		break;
-	case 2: // rterm
-		rtm = shell.FindWindow("ConsoleWindowClass","Rterm")
-		rpid = (rtm)?rtm.ProcessID:0
-		break;
-	default: 
-		rpid=0; 
+	default: // rterm
+		targwnd = shell.FindWindow("ConsoleWindowClass","Rterm")
 	}
-	return rpid;	
-}
+	return targwnd;
+	}
 
 function getChildProcID(parentWnd) {
 	// Required to find console running in RGui
@@ -45,7 +36,7 @@ function getChildProcID(parentWnd) {
 		Cwnds = parentWnd.Children
 		for ( i=1;i<=Cwnds.Count;i++) {
 			if (Cwnds.item(i).Caption == "R Console") { 
-				childWnd = Cwnds.item(i).ProcessID
+				childWnd = Cwnds.item(i) //.ProcessID
 				break;
 			} 
 		}	
@@ -54,8 +45,9 @@ function getChildProcID(parentWnd) {
 }
 
 function getAnyPid(skip) {
-	guipid = getProcID(1);
-	return guipid!=0?guipid:getProcID(2,skip);
+	guipid = getRWnd(1);
+	if (!guipid) {guipid = getRWnd(2)}
+	return guipid;
 }
 
 function createTempFile(rcode) {
@@ -94,21 +86,21 @@ function getRCode(skipSelectAll){
 	}	
 	return rcode;
 }
-function SendRCommand(pid,rcmd,rcode) {
-	retry = 0
-	if (pid>0) {
+
+function SendRCommand(wnd,rcmd,rcode) {
+	if (wnd) {
 		WshShell = new ActiveXObject( "WScript.Shell" )
 		if(rcode){
 			SendRC = rcmd + '+9' + rcode + '+0 ~'
 		} else {
 			SendRC = rcmd + ' ~'}
-		if ((shell.ForegroundWindow).ProcessID != pid) { 
-			WshShell.AppActivate (pid)
-			while ((shell.ForegroundWindow).ProcessID != pid || retry > 10) {sleep(100); retry++}
+		WshShell.AppActivate (wnd.ProcessID)
+		if ((shell.ForegroundWindow) != wnd ) {wnd.SetForeground();}
+			if ((shell.ForegroundWindow).ProcessID != wnd.ProcessID) { 
+			WshShell.AppActivate (wnd.ProcessID)
+			while ((shell.ForegroundWindow).ProcessID != wnd.ProcessID || retry > 10) {sleep(100); wnd.SetForeground(); retry++}
 		}
-		if ((shell.ForegroundWindow).ProcessID != pid) {OutputBar.Writeln("Could not send to R") }
-		else { WshShell.SendKeys( SendRC )  }
-		sleep(100)
+		WshShell.SendKeys( SendRC )
 	} else {
 		OutputBar.Writeln("No instance of R seems to be running") }
 }
